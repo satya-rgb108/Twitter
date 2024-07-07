@@ -50,6 +50,7 @@ export const signup = async (req, res) => {
         following: newUser.following,
         profileImg: newUser.profileImg,
         coverImg: newUser.coverImg,
+        likedPosts: newUser.likedPosts,
       });
     } else {
       res.status(400).json({ error: "Invalid user data" });
@@ -95,6 +96,7 @@ export const login = async (req, res) => {
       following: user.following,
       profileImg: user.profileImg,
       coverImg: user.coverImg,
+      likedPosts: user.likedPosts,
     });
   } catch (error) {
     console.error("Error in login controller:", error.message);
