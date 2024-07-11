@@ -213,8 +213,6 @@ const Post = ({ post }) => {
                                                         <span className='font-bold'>{comment.user.fullName}</span>
                                                         <span className='text-sm text-gray-700'>
                                                             @{comment.user.username}
-                                                            <span>·  </span>
-                                                            <span>{formattedDate}</span>
 
                                                         </span>
 
