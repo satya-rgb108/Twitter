@@ -3,19 +3,18 @@ import { BiRepost } from "react-icons/bi";
 import { FaRegHeart } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
+
 import LoadingSpinner from "./LoadingSpinner";
 import { formatPostDate } from "../../utils/date";
 
 const Post = ({ post }) => {
     const [comment, setComment] = useState("");
-    const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-
+    const { data: authUser, refetch } = useQuery({ queryKey: ["authUser"] });
     const queryClient = useQueryClient();
-
     const postOwner = post.user;
     const isLiked = post.likes.includes(authUser._id);
 
@@ -28,29 +27,24 @@ const Post = ({ post }) => {
             try {
                 const res = await fetch(`/api/posts/${post._id}`, {
                     method: "DELETE",
-
-                })
-
+                });
                 const data = await res.json();
 
                 if (!res.ok) {
                     throw new Error(data.error || "Something went wrong");
-
                 }
                 return data;
-
             } catch (error) {
                 throw new Error(error);
-
             }
         },
         onSuccess: () => {
             toast.success("Post deleted successfully");
-            //invalidate the query to refetch the data
-            queryClient.invalidateQueries({ queryKey: ["posts"] })
-        }
+            queryClient.invalidateQueries({ queryKey: ["posts"] });
+        },
     });
-    const { mutate: likePost, isPending: isLiking, error } = useMutation({
+
+    const { mutate: likePost, isPending: isLiking, } = useMutation({
         mutationFn: async () => {
             try {
                 const res = await fetch(`/api/posts/like/${post._id}`, {
@@ -63,15 +57,11 @@ const Post = ({ post }) => {
                 return data;
             } catch (error) {
                 throw new Error(error);
-
-
             }
         },
         onSuccess: (updatedLikes) => {
-            toast.success("Post liked successfully")
-            //this is not the best ux, because it will refetch all posts
-            // queryClient.invalidateQueries({ queryKey: ['posts'] });
-            //instead ,update the cache directly for that post
+            // this is not the best UX, bc it will refetch all posts
+            // queryClient.invalidateQueries({ queryKey: ["posts"] });
 
             // instead, update the cache directly for that post
             queryClient.setQueryData(["posts"], (oldData) => {
@@ -82,11 +72,10 @@ const Post = ({ post }) => {
                     return p;
                 });
             });
-
         },
-        onError: () => {
+        onError: (error) => {
             toast.error(error.message);
-        }
+        },
     });
 
     const { mutate: commentPost, isPending: isCommenting } = useMutation({
@@ -102,30 +91,22 @@ const Post = ({ post }) => {
                 const data = await res.json();
 
                 if (!res.ok) {
-                    throw new Error(data.error || "Something went wrong")
+                    throw new Error(data.error || "Something went wrong");
                 }
                 return data;
-
             } catch (error) {
-                throw new Error(error)
-
+                throw new Error(error);
             }
-
         },
         onSuccess: () => {
             toast.success("Comment posted successfully");
             setComment("");
             queryClient.invalidateQueries({ queryKey: ["posts"] });
-
         },
         onError: (error) => {
             toast.error(error.message);
-        }
-
-    })
-
-
-
+        },
+    });
 
     const handleDeletePost = () => {
         deletePost();
@@ -134,14 +115,16 @@ const Post = ({ post }) => {
     const handlePostComment = (e) => {
         e.preventDefault();
         if (isCommenting) return;
-        commentPost()
+        commentPost();
     };
 
     const handleLikePost = () => {
         if (isLiking) return;
         likePost();
-
     };
+    useEffect(() => {
+        refetch();
+    }, [post.likes, refetch]);
 
     return (
         <>
@@ -163,8 +146,11 @@ const Post = ({ post }) => {
                         </span>
                         {isMyPost && (
                             <span className='flex justify-end flex-1'>
-                                {!isDeleting && (<FaTrash className='cursor-pointer hover:text-red-500' onClick={handleDeletePost} />)}
-                                {isDeleting && (<LoadingSpinner size='sm' />)}
+                                {!isDeleting && (
+                                    <FaTrash className='cursor-pointer hover:text-red-500' onClick={handleDeletePost} />
+                                )}
+
+                                {isDeleting && <LoadingSpinner size='sm' />}
                             </span>
                         )}
                     </div>
@@ -213,9 +199,7 @@ const Post = ({ post }) => {
                                                         <span className='font-bold'>{comment.user.fullName}</span>
                                                         <span className='text-sm text-gray-700'>
                                                             @{comment.user.username}
-
                                                         </span>
-
                                                     </div>
                                                     <div className='text-sm'>{comment.text}</div>
                                                 </div>
@@ -233,11 +217,7 @@ const Post = ({ post }) => {
                                             onChange={(e) => setComment(e.target.value)}
                                         />
                                         <button className='px-4 text-white rounded-full btn btn-primary btn-sm'>
-                                            {isCommenting ? (
-                                                <LoadingSpinner size="md" />
-                                            ) : (
-                                                "Post"
-                                            )}
+                                            {isCommenting ? <LoadingSpinner size='md' /> : "Post"}
                                         </button>
                                     </form>
                                 </div>
