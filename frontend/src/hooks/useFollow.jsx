@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 
-const usefollow = () => {
+const useFollow = () => {
 
     const queryClient = useQueryClient();
 
@@ -52,4 +52,4 @@ const usefollow = () => {
 
 }
 
-export default usefollow;
+export default useFollow;
