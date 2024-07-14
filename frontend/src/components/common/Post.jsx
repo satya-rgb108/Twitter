@@ -13,7 +13,7 @@ import { formatPostDate } from "../../utils/date";
 
 const Post = ({ post }) => {
     const [comment, setComment] = useState("");
-    const { data: authUser, refetch } = useQuery({ queryKey: ["authUser"] });
+    const { data: authUser } = useQuery({ queryKey: ["authUser"] });
     const queryClient = useQueryClient();
     const postOwner = post.user;
     const isLiked = post.likes.includes(authUser._id);
@@ -122,9 +122,9 @@ const Post = ({ post }) => {
         if (isLiking) return;
         likePost();
     };
-    useEffect(() => {
-        refetch();
-    }, [post.likes, refetch]);
+    // useEffect(() => {
+    //     refetch();
+    // }, [post.likes, post.likePost, refetch]);
 
     return (
         <>
