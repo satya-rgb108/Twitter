@@ -16,7 +16,7 @@ const RightPanel = () => {
                 const data = await res.json();
 
                 if (!res.ok) {
-                    throw new Error(data.message || "Something went Wrong");
+                    throw new Error(data.error || "Something went Wrong");
                 }
                 return data;
 

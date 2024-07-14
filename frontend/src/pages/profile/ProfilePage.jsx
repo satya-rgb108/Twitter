@@ -11,10 +11,11 @@ import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
-import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { formatMemberSinceDate } from "../../utils/date";
 import useFollow from "../../hooks/useFollow";
-import toast from "react-hot-toast";
+
+import useUpdateUserProfile from "../../hooks/useUpdateUserProfile";
 
 const ProfilePage = () => {
     const [coverImg, setCoverImg] = useState(null);
@@ -25,7 +26,7 @@ const ProfilePage = () => {
     const profileImgRef = useRef(null);
     const { username } = useParams();
     const { follow, isPending } = useFollow();
-    const queryClient = useQueryClient()
+
 
     const { data: authUser } = useQuery({ queryKey: ["authUser"] });
 
@@ -49,50 +50,7 @@ const ProfilePage = () => {
         }
 
     });
-    const { mutate: updateProfile, isPending: isUpdatingProfile, error } = useMutation({
-        mutationFn: async () => {
-            try {
-                const res = await fetch(`/api/users/update/`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        coverImg,
-                        profileImg
-                    }),
-
-                })
-                const data = await res.json();
-
-                if (!res.ok) {
-                    throw new Error(data.error || "Something went wrong");
-                }
-
-                return data;
-
-
-            } catch (error) {
-                throw new Error(error.message);
-
-            }
-
-        },
-        onSuccess: () => {
-            toast.success("Profile updated successfully");
-            Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['authUser'] }),
-                queryClient.invalidateQueries({ queryKey: ['userProfile'] }),
-            ]
-
-            )
-
-        },
-        onError: () => {
-            toast.error(error.message)
-        }
-
-    })
+    const { updateProfile, isUpdatingProfile } = useUpdateUserProfile();
 
     const isMyProfile = authUser._id === user?._id;
     const memberSinceDate = formatMemberSinceDate(user?.createdAt);
@@ -193,7 +151,11 @@ const ProfilePage = () => {
                                 {(coverImg || profileImg) && (
                                     <button
                                         className='px-4 ml-2 text-white rounded-full btn btn-primary btn-sm'
-                                        onClick={() => updateProfile()}
+                                        onClick={async () => {
+                                            updateProfile({ coverImg, profileImg });
+                                            setProfileImg(null);
+                                            setCoverImg(null);
+                                        }}
                                     >
                                         {isUpdatingProfile ? "Updating..." : "Update"}
                                     </button>
@@ -213,12 +175,12 @@ const ProfilePage = () => {
                                             <>
                                                 <FaLink className='w-3 h-3 text-slate-500' />
                                                 <a
-                                                    href='https://youtube.com/@asaprogrammer_'
+                                                    href={user.link}
                                                     target='_blank'
                                                     rel='noreferrer'
                                                     className='text-sm text-blue-500 hover:underline'
                                                 >
-                                                    youtube.com/@asaprogrammer_
+                                                    {user?.link}
                                                 </a>
                                             </>
                                         </div>
